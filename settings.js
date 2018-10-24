@@ -20,7 +20,7 @@
 
 module.exports = {
     // the tcp port that the Node-RED web server is listening on
-    uiPort: process.env.PORT || 1880,
+    uiPort: process.env.PORT || 1890,
 
     // By default, the Node-RED UI accepts connections on all IPv4 interfaces.
     // To listen on all IPv6 addresses, set uiHost to "::",
@@ -65,11 +65,11 @@ module.exports = {
     //debugUseColors: true,
 
     // The file containing the flows. If not set, it defaults to flows_<hostname>.json
-    //flowFile: 'flows.json',
+    flowFile: 'flows.json',
 
     // To enabled pretty-printing of the flow within the flow file, set the following
     //  property to true:
-    //flowFilePretty: true,
+    flowFilePretty: true,
 
     // By default, credentials are encrypted in storage using a generated key. To
     // specify your own secret, set the following property.
@@ -81,7 +81,7 @@ module.exports = {
 
     // By default, all user data is stored in the Node-RED install directory. To
     // use a different location, the following property can be used
-    //userDir: '/home/nol/.node-red/',
+    userDir: './',
 
     // Node-RED scans the `nodes` directory in the install directory to find nodes.
     // The following property can be used to specify an additional directory to scan.
@@ -109,7 +109,7 @@ module.exports = {
 
     // The maximum size of HTTP request that will be accepted by the runtime api.
     // Default: 5mb
-    //apiMaxLength: '5mb',
+    apiMaxLength: '15mb',
 
     // If you installed the optional node-red-dashboard you can set it's path
     // relative to httpRoot
@@ -242,7 +242,7 @@ module.exports = {
             // debug - record information which is more verbose than info + info + warn + error + fatal errors
             // trace - record very detailed logging + debug + info + warn + error + fatal errors
             // off - turn off all logging (doesn't affect metrics or audit)
-            level: "info",
+            level: "trace",
             // Whether or not to include metric events in the log output
             metrics: false,
             // Whether or not to include audit events in the log output
@@ -254,7 +254,7 @@ module.exports = {
     editorTheme: {
         projects: {
             // To enable the Projects feature, set this value to true
-            enabled: false
+            enabled: true
         }
     },
 }

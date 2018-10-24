@@ -17,3 +17,9 @@ node_modules
 public
 locales/zz-ZZ
 nodes/core/locales/zz-ZZ
+
+pki/untrusted/
+
+log-file\.txt
+
+error-file\.txt

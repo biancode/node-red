@@ -26,6 +26,8 @@ var path = require("path");
 var fs = require("fs-extra");
 var RED = require("./red/red.js");
 
+const dash = require('appmetrics-dash').monitor();
+
 var server;
 var app = express();
 
