@@ -12,7 +12,8 @@
   "scripts": {
     "start": "node red.js --set_max_old_space_size=512",
     "test": "grunt",
-    "build": "grunt build"
+    "build": "grunt build",
+    "dasboard:mac": "open http://localhost:3001/appmetrics-dash"
   },
   "bin": {
     "node-red": "./red.js",
