@@ -10,7 +10,7 @@
   },
   "main": "red/red.js",
   "scripts": {
-    "start": "node red.js --set_max_old_space_size=512",
+    "start": "DEBUG=opcuaIIoT:core,opcuaIIoT:core:* node red.js --set_max_old_space_size=512",
     "test": "grunt",
     "build": "grunt build",
     "dashboard:mac": "open http://localhost:3001/appmetrics-dash"
@@ -35,6 +35,7 @@
   ],
   "dependencies": {
     "ajv": "6.5.4",
+    "appmetrics-dash": "^4.0.0",
     "basic-auth": "2.0.1",
     "bcryptjs": "2.4.3",
     "body-parser": "1.18.3",
