@@ -1,3 +1,44 @@
+#### 0.20.0: Milestone Release
+
+Runtime
+ - Pass complete status to Status node and filter to editor
+ - Ensure flows wait for all nodes to close before restarting Fixes #2067
+ - Fix git clone with password protected key
+ - Allow a project to be located below the root of repo
+ - Detect the cloning of an empty git repo properly
+ - Fix use of custom auth strategy plugins
+ - Remove remnants of when library in git/index Fixes #2057
+ - Clear subflow status on close
+ - Add exportGlobalContextKeys to prevent exposing functionGlobalContext keys
+ - Add --no-audit and --no-update-notifier flags to npm commands to reduce workload
+ - Add envVarExcludes setting to block named env vars
+ - Update settings.js docs on userDir to match reality Fixes #2082
+ - Add Korean Language
+
+
+Editor
+ - Automatic placing of node icon according to input/output counts
+ - Transfer placeholder and type to generated TypedInput field
+ - Hitting enter in Comment node name field clicks markdown button
+ - Shift status text left if no shape specified
+ - Better align node status text to status dot
+ - Handle treeList labels as text not html
+ - Change subflow edit dialog titles
+ - Resize subflow edit dialog properly
+ - Add flow list button to tab bar
+ - Handle node name as unsanitized text in debug sidebar
+
+Nodes
+
+ - HTTP Request: Add Digest and Bearer Auth modes to http request node (#2061)
+ - HTTP Request: Add multipart/form-data support to http request node (#2076)
+ - TCP: include session/event info in status events
+ - WebSocket: include session/event info in status events
+ - Add i18n support for port label of inject/exec/httprequest/file nodes
+ - Join node: handle merged objects with repeated properties and honour parts
+ - JSON node: handle single booleans and numbers
+ - File node: add encoding support to file in/out node (#2066)
+
 #### 0.20.0-beta.5: Beta Release
 
 Runtime
