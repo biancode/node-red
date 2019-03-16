@@ -2,6 +2,8 @@
 
 rm -rf node_modules/
 
+rm package-lock.json
+
 git clean -fd
 
 npm install
