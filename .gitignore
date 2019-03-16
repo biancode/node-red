@@ -28,3 +28,5 @@ pki/untrusted/
 log-file\.txt
 
 error-file\.txt
+
+\.idea/

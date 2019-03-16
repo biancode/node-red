@@ -2,10 +2,18 @@
 
 cd node_modules
 
-ln -s ~/Development/test/node-red-contrib-opcua-compact node-red-contrib-opcua-compact
+rm node-red-contrib-opcua-server
 
-ln -s ~/Development/github/node-red-contrib-iiot-opcua node-red-contrib-iiot-opcua
+ln -s ~/Development/github/BiancoRoyal/node-red-contrib-opcua-server node-red-contrib-opcua-server
 
-ln -s ~/Development/github/node-red-contrib-modbus node-red-contrib-modbus
+rm node-red-contrib-iiot-opcua
 
-ln -s ~/Development/github/node-red-contrib-iiot-jwt node-red-contrib-iiot-jwt
+ln -s ~/Development/github/BiancoRoyal/node-red-contrib-iiot-opcua node-red-contrib-iiot-opcua
+
+rm node-red-contrib-modbus
+
+ln -s ~/Development/github/biancode/node-red-contrib-modbus node-red-contrib-modbus
+
+rm node-red-contrib-iiot-jwt
+
+ln -s ~/Development/github/biancode/node-red-contrib-iiot-jwt node-red-contrib-iiot-jwt
