@@ -1,3 +1,23 @@
+#### 0.20.3: Maintenance Release
+
+- Do not dynamically add/remove upgrade listener in ws nodes
+- Avoid env var reference loops and support $parent. prefix Fixes #2099
+- Ensure config.\_flow is non-enumerable so is ignored by JSON.stringify
+- Block loading ACE from cdn
+
+#### 0.20.2: Maintenance Release
+
+ - Filter out duplicate nodes when importing a flow
+ - Handle node configs with multiple external scripts properly
+
+#### 0.20.1: Maintenance Release
+
+ - Ensure all subflow instances are stopped when flow stopping Fixes #2095
+ - modify name of korean locale forders #2091
+ - Ensure node names are sanitized before being presented
+ - Subflow status node must pass status to parent flow Fixes #2087
+ - fix problem on displaying option label on Firefox #2090
+
 #### 0.20.0: Milestone Release
 
 Runtime
