@@ -52,8 +52,11 @@ function getFlowFilename() {
 }
 
 function cleanup(flowFile) {
-    deleteFile(homeDir+"/"+flowFile);
-    deleteFile(homeDir+"/."+flowFile+".backup");
+    var credentialFile = flowFile.replace(/\.json$/, '') + '_cred.json';
+    deleteFile(homeDir + "/" + flowFile);
+    deleteFile(homeDir + "/." + flowFile + ".backup");
+    deleteFile(homeDir + "/" + credentialFile);
+    deleteFile(homeDir + "/." + credentialFile + ".backup");
 }
 
 function deleteFile(flowFile) {
@@ -77,7 +80,6 @@ module.exports = {
             browser.call(function () {
                 return new Promise(function(resolve, reject) {
                     cleanup(flowFilename);
-                    app.use("/",express.static("public"));
                     server = http.createServer(app);
                     var settings = {
                         httpAdminRoot: "/",
@@ -102,7 +104,7 @@ module.exports = {
                 });
             });
             browser.url(url);
-            browser.waitForExist('#palette_node_inject');
+            browser.waitForExist(".red-ui-palette-node[data-palette-type='inject']")
         } catch (err) {
             console.log(err);
             throw err;

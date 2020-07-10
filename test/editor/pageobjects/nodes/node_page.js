@@ -22,24 +22,26 @@ Node.prototype.edit = function() {
     browser.clickWithWait(this.id);
     browser.clickWithWait(this.id);
     // Wait until an edit dialog opens.
-    browser.waitForVisible('#node-dialog-ok', 2000);
+    browser.waitForVisible('#node-dialog-ok', 4000);
 }
 
 Node.prototype.clickOk = function() {
     browser.clickWithWait('#node-dialog-ok');
     // Wait untile an edit dialog closes.
-    browser.waitForVisible('#node-dialog-ok', 2000, true);
+    browser.waitForVisible('#node-dialog-ok', 4000, true);
     browser.pause(50);
 }
 
 Node.prototype.connect = function(targetNode) {
-    var outputPort = this.id + '/*[@class="port_output"]';
-    var inputPort = targetNode.id + '/*[@class="port_input"]';
+    var outputPort = this.id + '/*[@class="red-ui-flow-port-output"]';
+    var inputPort = targetNode.id + '/*[@class="red-ui-flow-port-input"]';
     browser.dragAndDrop(outputPort, inputPort)
 }
 
-Node.prototype.clickLeftButton = function() {
-    browser.clickWithWait(this.id + '/*[@class="node_button node_left_button"]');
+Node.prototype.clickLeftButton = function () {
+    browser.moveToObject(this.id + '/*[@class="red-ui-flow-node-button"]');
+    browser.buttonDown();
+    browser.buttonUp();
 }
 
 module.exports = Node;
