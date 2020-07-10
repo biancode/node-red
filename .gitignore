@@ -30,3 +30,5 @@ log-file\.txt
 error-file\.txt
 
 \.idea/
+
+.vscode
