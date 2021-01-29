@@ -32,3 +32,4 @@ error-file\.txt
 \.idea/
 
 .vscode
+.nyc_output
