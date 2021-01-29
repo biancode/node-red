@@ -20,10 +20,16 @@ var sass = require("node-sass");
 
 module.exports = function(grunt) {
 
-    var nodemonArgs = ["-v"];
+    var nodemonArgs = ["-V"];
     var flowFile = grunt.option('flowFile');
     if (flowFile) {
         nodemonArgs.push(flowFile);
+        process.env.NODE_RED_ENABLE_PROJECTS=false;
+    }
+    var userDir = grunt.option('userDir');
+    if (userDir) {
+        nodemonArgs.push("-u");
+        nodemonArgs.push(userDir);
     }
 
     var browserstack = grunt.option('browserstack');
@@ -47,8 +53,8 @@ module.exports = function(grunt) {
                 ui: 'bdd',
                 reporter: 'spec'
             },
-            all: { src: ['test/**/*_spec.js'] },
-            core: { src: ["test/_spec.js","test/unit/**/*_spec.js"]},
+            all: { src: ["test/unit/_spec.js","test/unit/**/*_spec.js","test/nodes/**/*_spec.js"] },
+            core: { src: ["test/unit/_spec.js","test/unit/**/*_spec.js"]},
             nodes: { src: ["test/nodes/**/*_spec.js"]}
         },
         webdriver: {
@@ -56,19 +62,19 @@ module.exports = function(grunt) {
                 configFile: 'test/editor/wdio.conf.js'
             }
         },
-        mocha_istanbul: {
+        nyc: {
             options: {
-                globals: ['expect'],
-                timeout: 3000,
-                ignoreLeaks: false,
-                ui: 'bdd',
-                reportFormats: ['lcov','html'],
-                print: 'both',
-                istanbulOptions: ['--no-default-excludes', '-i','**/packages/node_modules/**']
+                cwd: '.',
+                include: ['packages/node_modules/**'],
+                excludeNodeModules: false,
+                exclude: ['packages/node_modules/@node-red/editor-client/**'],
+                reporter: ['lcov', 'html','text-summary'],
+                reportDir: 'coverage',
+                all: true
             },
-            all: { src: ["test/unit/_spec.js","test/unit/**/*_spec.js","test/nodes/**/*_spec.js"] },
-            core: { src: ["test/unit/_spec.js","test/unit/**/*_spec.js"]},
-            nodes: { src: ["test/nodes/**/*_spec.js"]}
+            all:   { cmd: false, args: ['grunt', 'simplemocha:all'] },
+            core:  { options: { exclude:['packages/node_modules/@node-red/editor-client/**', 'packages/node_modules/@node-red/nodes/**']},cmd: false, args: ['grunt', 'simplemocha:core'] },
+            nodes: { cmd: false, args: ['grunt', 'simplemocha:nodes'] }
         },
         jshint: {
             options: {
@@ -136,6 +142,7 @@ module.exports = function(grunt) {
                     "packages/node_modules/@node-red/editor-client/src/js/text/bidi.js",
                     "packages/node_modules/@node-red/editor-client/src/js/text/format.js",
                     "packages/node_modules/@node-red/editor-client/src/js/ui/state.js",
+                    "packages/node_modules/@node-red/editor-client/src/js/plugins.js",
                     "packages/node_modules/@node-red/editor-client/src/js/nodes.js",
                     "packages/node_modules/@node-red/editor-client/src/js/font-awesome.js",
                     "packages/node_modules/@node-red/editor-client/src/js/history.js",
@@ -452,9 +459,11 @@ module.exports = function(grunt) {
                     'packages/node_modules/@node-red/runtime/lib/index.js',
                     'packages/node_modules/@node-red/runtime/lib/api/*.js',
                     'packages/node_modules/@node-red/runtime/lib/events.js',
+                    'packages/node_modules/@node-red/runtime/lib/hooks.js',
                     'packages/node_modules/@node-red/util/**/*.js',
                     'packages/node_modules/@node-red/editor-api/lib/index.js',
-                    'packages/node_modules/@node-red/editor-api/lib/auth/index.js'
+                    'packages/node_modules/@node-red/editor-api/lib/auth/index.js',
+                    'packages/node_modules/@node-red/registry/lib/index.js'
                 ],
                 options: {
                     destination: 'docs',
@@ -502,12 +511,10 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-concurrent');
     grunt.loadNpmTasks('grunt-sass');
-    grunt.loadNpmTasks('grunt-nodemon');
     grunt.loadNpmTasks('grunt-contrib-compress');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-chmod');
     grunt.loadNpmTasks('grunt-jsonlint');
-    grunt.loadNpmTasks('grunt-mocha-istanbul');
     if (fs.existsSync(path.join("node_modules", "grunt-webdriver"))) {
         grunt.loadNpmTasks('grunt-webdriver');
     }
@@ -515,6 +522,26 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-jsdoc-to-markdown');
     grunt.loadNpmTasks('grunt-npm-command');
     grunt.loadNpmTasks('grunt-mkdir');
+    grunt.loadNpmTasks('grunt-simple-nyc');
+
+    grunt.registerMultiTask('nodemon', 'Runs a nodemon monitor of your node.js server.', function () {
+        const nodemon = require('nodemon');
+        this.async();
+        const options = this.options();
+        options.script = this.data.script;
+        let callback;
+        if (options.callback) {
+            callback = options.callback;
+            delete options.callback;
+        } else {
+            callback = function(nodemonApp) {
+                nodemonApp.on('log', function (event) {
+                    console.log(event.colour);
+                });
+            };
+        }
+        callback(nodemon(options));
+    });
 
     grunt.registerMultiTask('attachCopyright', function() {
         var files = this.data.src;
@@ -596,11 +623,16 @@ module.exports = function(grunt) {
 
     grunt.registerTask('default',
         'Builds editor content then runs code style checks and unit tests on all components',
-        ['build','verifyPackageDependencies','jshint:editor','mocha_istanbul:all']);
+        ['build','verifyPackageDependencies','jshint:editor','nyc:all']);
+
+    grunt.registerTask('no-coverage',
+        'Builds editor content then runs code style checks and unit tests on all components without code coverage',
+        ['build','verifyPackageDependencies','jshint:editor','simplemocha:all']);
+
 
     grunt.registerTask('test-core',
         'Runs code style check and unit tests on core runtime code',
-        ['build','mocha_istanbul:core']);
+        ['build','nyc:core']);
 
     grunt.registerTask('test-editor',
         'Runs code style check on editor code',
@@ -618,12 +650,12 @@ module.exports = function(grunt) {
 
     grunt.registerTask('test-nodes',
         'Runs unit tests on core nodes',
-        ['build','mocha_istanbul:nodes']);
+        ['build','nyc:nodes']);
 
     grunt.registerTask('build',
         'Builds editor content',
         ['clean:build','jsonlint','concat:build','concat:vendor','copy:build','uglify:build','sass:build','attachCopyright']);
-        
+
     grunt.registerTask('build-dev',
         'Developer mode: build dev version',
         ['clean:build','concat:build','concat:vendor','copy:build','sass:build','setDevEnv']);
@@ -643,7 +675,7 @@ module.exports = function(grunt) {
 
     grunt.registerTask('coverage',
         'Run Istanbul code test coverage task',
-        ['build','mocha_istanbul:all']);
+        ['build','nyc:all']);
 
     grunt.registerTask('docs',
         'Generates API documentation',

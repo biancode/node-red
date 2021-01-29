@@ -1,3 +1,180 @@
+### 1.2.7: Maintenance Release
+
+Editor
+
+ - Ensure subflow-scoped config nodes do not get moved on import Fixes #2789
+ - Allow TypedInput to be disabled (#2752) @bartbutenaers
+ - Allow userMenu to be explicitly enabled (#2805) @tfmf
+ - Improvements to DE translation (#2192) @ketzu
+
+
+Runtime
+
+ - Handle `undefined` error passed to node.error (#2781) @johnwang71
+ - Disable nyc coverage reporting on older node versions
+ - Improve Editor API unit test coverage (#2777) @aaronmyatt
+
+
+Nodes
+
+ - Trigger: ensure timestamp option sends .now() at point of sending
+
+
+### 1.2.6: Maintenance Release
+
+
+Editor
+
+ - Update Japanese translations for 1.2.5 (#2764) @kazuhitoyokoi
+ - Library: properly handle symlinked folders (#2768) @natcl
+
+Runtime
+
+ - Support Windows paths when installing tarball by path name Fixes #2769
+ - Fix unsecure command usage in GH Action
+
+Nodes
+
+ - Update MQTT to latest to fix Node 8 URL breakage
+
+
+
+
+### 1.2.5: Maintenance Release
+
+Editor
+
+ - Fix import of config nodes with unknown z property
+
+Runtime
+
+ - Set ACTIONS_ALLOW_UNSECURE_COMMANDS in GH Action
+
+### 1.2.4: Maintenance Release
+
+Editor
+
+ - Support bigint types in Debug sidebar
+ - Clear retained status of deleted nodes
+ - Prevent needless retention of node status messages
+ - Update projects dialogs to use TypedInput-cred input
+ - Restore cursor position in TypedInput cred-mode
+ - Ensure config nodes with invalid z are imported somewhere
+ - Ensure user keyboard shortcuts override defaults Fixes #2753
+
+Runtime
+
+ - Disable projects when flowFile passed into grunt dev
+ - Add Russian Locale (#2761) (#2531) (@alexk111)
+ - Add Japanese translation for http-in node (#2758) (@kazuhitoyokoi)
+
+Nodes
+
+ - CSV: Fix CSV node repeating array output
+
+### 1.2.3: Maintenance Release
+
+Editor
+
+ - Disable 'use strict' checking in Function node Fixes #2743
+ - Add gray/grey alternate options for status
+ - Handle import errors on initial load and report to user
+ - Only apply recovery tab on initial load Fixes #2731
+ - Reinstate coveralls reporting to travis build
+ - Update Japanese message catalogue for 1.2.3 release #2747 (@HiroyasuNishiyama)
+
+Runtime
+
+ - Modify default settings comment (#2739)
+ - Add mutex lock to saveSettings storage call Fixes #2736 (#2737)
+ - Migrate to nyc instead of istanbul for code coverage
+ - Move mosca to ui-test-dependencies
+ - Remove " from npm install prefix option
+
+### 1.2.2: Maintenance Release
+
+Editor
+
+ - Prevent node z property getting set to 0 or ""
+ - Only apply z-recovery logic to flow nodes
+ - Fix api call to reload flows Fixes #2726
+ - Remove bad z property from import config nodes
+
+### 1.2.1: Maintenance Release
+
+Runtime
+
+ - Fix race condition in .config file migration Fixes #2724
+
+
+### 1.2.0: Milestone Release
+
+Editor
+
+ - Fix selection of link node not existing within active workspace #2722 (@HiroyasuNishiyama)
+ - Fix import of merged flow
+ - Fix width of upload button in Safari #2718 (@HiroyasuNishiyama)
+ - Update Chinese translations #2719 (@JiyeYu)
+ - Update Japanese translations needed for 1.2 #2710 (@kazuhitoyokoi)
+ - Fix unexpected line break of sidebar tab name popover #2716 (@HiroyasuNishiyama)
+ - i18n module refresh tooltip #2717 (@HiroyasuNishiyama)
+ - Add better error message if context file gets corrupted
+ - Update info text of function node #2714 (@HiroyasuNishiyama)
+ - Use markdown editor if editText called with md mode
+ - Prevent group actions when in non-default mouse mode
+
+### 1.2.0-beta.1: Beta Release
+
+Editor
+
+ - Detect importing duplicate nodes and help user resolve #2698
+ - Allow sidebar tabs to be reordered #2655
+ - Add tgz upload button to palette manager #2682
+ - Add 'automatic' git workflow for projects #2035
+ - Allow project version string to be edited
+ - Sanitize unknown node type when displaying
+ - Handle nodes with invalid z property Closes #2170
+ - Outline: Ensure sf instance nodes update in outliner when import-replace sf
+ - Outline: Ensure recovered nodes tab is added to outliner properly
+ - Groups: Only recalculate group label offsets when needed
+ - Groups: Reuse first group name/style when merging elements Fixes #2680
+ - Groups: Fix copy/paste of node into active group Fixes #2686
+ - ACE: Update ACE to 1.4.12-src-min-noconflict Fixes #1988
+ - ACE: Add comment highlighting to JSONata and fix regex handling Closes #2701
+ - ACE: Ensure errors in ACE NRJavaScript mode are on valid lines
+ - Prevent Enter on search box from reloading page Fixes #2678
+ - Allow toggleButton icons to be optional
+ - Allow treeList to have a header component
+ - Disable selection of FA icons when dbl clicking node
+
+Runtime
+
+ - Add RED.hooks API for pluggable routing #2665
+ - Add flows:* events and deprecate nodes-* events
+ - Split .config.json into separate files #2794
+ - Add support for file upload in /nodes api #2682
+ - Add 'done' metric log for message tracing #2685 (@k-toumura)
+ - Add mutex locking around /flow apis #2679
+ - Default flowFilePretty to true if projects enabled
+ - Replace Math.random with crypto.getBytes for session tokens
+ - Fix `this` context when calling multiple event listeners Fixes #2692. #2693 (@mgroenhoff)
+ - Add --userDir=/tmp/foo support to grunt dev
+ - Skip loading node html if disableEditor set #2684
+ - Update util.writeFile to write to tmp file before rename #2683
+ - Fix getModuleFiles function to include path property #2705 (@t-kawamorita)
+ - Update nodemon to latest so grunt dev task behaves
+ - Improve jsdoc of util.getObjectProperty to clarify thrown error See #2703
+
+Nodes
+
+ - Trigger: allow msg.delay to be used to set delay/loop interval #2707
+ - Function: allow to send & log in its initialize code #2644 (@cinhcet)
+ - MQTT: Update to MQTT 4.2.1 Closes #2694
+ - Debug: Handle undefined value in Debug view of Array and Object Fixes #2696
+ - Switch: Clarify empty rules in switch node documentation #2649 (@natcl) #2669 (@kazuhitoyokoi)
+ - Updated core nodes to use Done callback #2653 (@k-toumura)
+     - yaml,  xml, json, html, http, template, range, link, status, catch, complete, inject
+
 ### 1.1.3: Maintenance Release
 
 Editor

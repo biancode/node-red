@@ -23,5 +23,4 @@ packages/node_modules/@node-red/editor-client/public
 docs
 !packages/node_modules/**/docs
 .vscode
-
-\.idea/
+.nyc_output
