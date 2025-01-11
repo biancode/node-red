@@ -267,7 +267,12 @@ describe('switch Node', function() {
     it('should not match if the key is not a string', function(done) {
         genericSwitchTest("hask", 1, true, false, {a:1}, done);
     });
-
+    it('should not match if the parent object does not exist - null', function(done) {
+        genericSwitchTest("hask", "a", true, false, null, done);
+    });
+    it('should not match if the parent object does not exist - undefined', function(done) {
+        genericSwitchTest("hask", "a", true, false, undefined, done);
+    });
     it('should check if payload is between given values', function(done) {
         twoFieldSwitchTest("btwn", "3", "5", true, true, 4, done);
     });
@@ -304,6 +309,12 @@ describe('switch Node', function() {
     });
     it('should check if payload if of type number 0', function(done) {
         genericSwitchTest("istype", "number", true, true, 0, done);
+    });
+    it('should check if payload if of type number NaN', function(done) {
+        genericSwitchTest("istype", "number", true, false, parseInt("banana"), done);
+    });
+    it('should check if payload if of type number Infinity', function(done) {
+        genericSwitchTest("istype", "number", true, true, 1/0, done);
     });
     it('should check if payload if of type boolean true', function(done) {
         genericSwitchTest("istype", "boolean", true, true, true, done);
@@ -1129,4 +1140,20 @@ describe('switch Node', function() {
         });
     });
 
+
+    it('should handle empty rule', function(done) {
+        var flow = [{id:"switchNode1",type:"switch",name:"switchNode",property:"payload",rules:[],checkall:true,outputs:0,wires:[]}];
+        helper.load(switchNode, flow, function() {
+            var n1 = helper.getNode("switchNode1");
+            setTimeout(function() {
+                var logEvents = helper.log().args.filter(function (evt) {
+                    return evt[0].type == "switch";
+                });
+                if (logEvents.length === 0) {
+                    done();
+                }
+            }, 150);
+            n1.receive({payload:1});
+        });
+    });
 });

@@ -18,7 +18,7 @@ var should = require("should");
 var functionNode = require("nr-test-utils").require("@node-red/nodes/core/function/10-function.js");
 var Context = require("nr-test-utils").require("@node-red/runtime/lib/nodes/context");
 var helper = require("node-red-node-test-helper");
-
+var RED = require("nr-test-utils").require("node-red/lib/red");
 describe('function node', function() {
 
     before(function(done) {
@@ -52,6 +52,46 @@ describe('function node', function() {
             return Context.close();
         });
     });
+
+    it('should send returned message using send()', function(done) {
+        var flow = [{id:"n1",type:"function",wires:[["n2"]],func:"node.send(msg);"},
+        {id:"n2", type:"helper"}];
+        helper.load(functionNode, flow, function() {
+            var n1 = helper.getNode("n1");
+            var n2 = helper.getNode("n2");
+            n2.on("input", function(msg) {
+                msg.should.have.property('topic', 'bar');
+                msg.should.have.property('payload', 'foo');
+                done();
+            });
+            n1.receive({payload:"foo",topic: "bar"});
+        });
+    });
+
+    it('should do something with the catch node', function(done) {
+        var flow = [{"id":"funcNode","type":"function","wires":[["goodNode"]],"func":"node.error('This is an error', msg);"},{"id":"goodNode","type":"helper"},{"id":"badNode","type":"helper"},{"id":"catchNode","type":"catch","scope":null,"uncaught":false,"wires":[["badNode"]]}];
+        var catchNodeModule = require("nr-test-utils").require("@node-red/nodes/core/common/25-catch.js")
+        helper.load([catchNodeModule, functionNode], flow, function() {
+            var funcNode = helper.getNode("funcNode");
+            var catchNode = helper.getNode("catchNode");
+            var goodNode = helper.getNode("goodNode");
+            var badNode = helper.getNode("badNode");
+
+            badNode.on("input", function(msg) {
+                msg.should.have.property('topic', 'bar');
+                msg.should.have.property('payload', 'foo');
+                msg.should.have.property('error');
+                msg.error.should.have.property('message',"This is an error");
+                msg.error.should.have.property('source');
+                msg.error.source.should.have.property('id', "funcNode");
+                done();
+            });
+            funcNode.receive({payload:"foo",topic: "bar"});
+        });
+    });
+
+
+
 
     it('should be loaded', function(done) {
         var flow = [{id:"n1", type:"function", name: "function" }];
@@ -89,6 +129,28 @@ describe('function node', function() {
                 done();
             });
             n1.receive({payload:"foo",topic: "bar"});
+        });
+    });
+
+    it('should allow accessing node.id and node.name and node.outputCount', function(done) {
+        var flow = [{id:"n1",name:"test-function", outputs: 2, type:"function",wires:[["n2"]],func: "return [{ topic: node.name, payload:node.id, outputCount: node.outputCount }];"},
+        {id:"n2", type:"helper"}];
+        helper.load(functionNode, flow, function() {
+            var n1 = helper.getNode("n1");
+            var n2 = helper.getNode("n2");
+            n2.on("input", function(msg) {
+                try {
+                    // Use this form of assert as `msg` is created inside
+                    // the sandbox and doesn't get all the should.js monkey patching
+                    should.equal(msg.payload, n1.id);
+                    should.equal(msg.topic, n1.name);
+                    should.equal(msg.outputCount, n1.outputs);
+                    done();
+                } catch(err) {
+                    done(err);
+                }
+            });
+            n1.receive({payload:""});
         });
     });
 
@@ -328,7 +390,8 @@ describe('function node', function() {
                     msg.should.have.property('level', helper.log().ERROR);
                     msg.should.have.property('id', 'n1');
                     msg.should.have.property('type', 'function');
-                    msg.should.have.property('msg', 'ReferenceError: retunr is not defined (line 2, col 1)');
+                    msg.should.have.property('msg')
+                    msg.msg.message.should.equal('ReferenceError: retunr is not defined (line 2, col 1)');
                     done();
                 } catch(err) {
                     done(err);
@@ -597,7 +660,8 @@ describe('function node', function() {
                 msg.should.have.property('level', helper.log().ERROR);
                 msg.should.have.property('id', name);
                 msg.should.have.property('type', 'function');
-                msg.should.have.property('msg', 'Error: Callback must be a function');
+                msg.should.have.property('msg')
+                msg.msg.message.should.equal('Callback must be a function');
                 done();
             }
             catch (e) {
@@ -1362,17 +1426,163 @@ describe('function node', function() {
         });
     });
 
-    it('should execute finalization', function(done) {
-        var flow = [{id:"n1",type:"function",wires:[],func:"return msg;",finalize:"global.set('X','bar');"}];
+    it('should timeout if timeout is set', function(done) {
+        var flow = [{id:"n1",type:"function",wires:[["n2"]],timeout:"0.010",func:"while(1==1){};\nreturn msg;"}];
         helper.load(functionNode, flow, function() {
             var n1 = helper.getNode("n1");
-            var ctx = n1.context().global;
-            helper.unload().then(function () {
-                ctx.get('X').should.equal("bar");
-                done();
-            });
+            n1.receive({payload:"foo",topic: "bar"});
+            setTimeout(function() {
+                try {
+                    helper.log().called.should.be.true();
+                    var logEvents = helper.log().args.filter(function(evt) {
+                        return evt[0].type == "function";
+                    });
+                    logEvents.should.have.length(1);
+                    var msg = logEvents[0][0];
+                    msg.should.have.property('level', helper.log().ERROR);
+                    msg.should.have.property('id', 'n1');
+                    msg.should.have.property('type', 'function');
+                    should.equal(msg.msg.message, 'Script execution timed out after 10ms');
+                    done();
+                } catch(err) {
+                    done(err);
+                }
+            },50);
         });
     });
+
+    it('check if default function timeout settings are recognized', function (done) {
+        RED.settings.functionTimeout = 0.01;
+        var flow = [{id: "n1",type: "function",timeout: RED.settings.functionTimeout,wires: [["n2"]],func: "while(1==1){};\nreturn msg;"}];
+        helper.load(functionNode, flow, function () {
+            var n1 = helper.getNode("n1");
+            n1.receive({ payload: "foo", topic: "bar" });
+            setTimeout(function () {
+                try {
+                    helper.log().called.should.be.true();
+                    var logEvents = helper.log().args.filter(function (evt) {
+                        return evt[0].type == "function";
+                    });
+                    logEvents.should.have.length(1);
+                    var msg = logEvents[0][0];
+                    msg.should.have.property('level', helper.log().ERROR);
+                    msg.should.have.property('id', 'n1');
+                    msg.should.have.property('type', 'function');
+                    should.equal(RED.settings.functionTimeout, 0.01);
+                    should.equal(msg.msg.message, 'Script execution timed out after 10ms');
+                    delete RED.settings.functionTimeout;
+                    done();
+                } catch (err) {
+                    done(err);
+                }
+            }, 500);
+        });
+    });
+
+    describe("finalize function", function() {
+
+        it('should execute', function(done) {
+            var flow = [{id:"n1",type:"function",wires:[],func:"return msg;",finalize:"global.set('X','bar');"}];
+            helper.load(functionNode, flow, function() {
+                var n1 = helper.getNode("n1");
+                var ctx = n1.context().global;
+                helper.unload().then(function () {
+                    ctx.get('X').should.equal("bar");
+                    done();
+                });
+            });
+        });
+
+        it('should allow accessing node.id and node.name and node.outputCount', function(done) {
+            var flow = [{id:"n1",name:"test-function", outputs: 2, type:"function",wires:[["n2"]],finalize:"global.set('finalize-data', { topic: node.name, payload:node.id, outputCount: node.outputCount});", func: "return msg;"}];
+            helper.load(functionNode, flow, function() {
+                var n1 = helper.getNode("n1");
+                var ctx = n1.context().global;
+                helper.unload().then(function () {
+                    const finalizeData = ctx.get('finalize-data');
+                    should.equal(finalizeData.payload, n1.id);
+                    should.equal(finalizeData.topic, n1.name);
+                    should.equal(finalizeData.outputCount, n1.outputs);
+                    done();
+                });
+            });
+        });
+
+    })
+
+    describe('externalModules', function() {
+        afterEach(function() {
+            delete RED.settings.functionExternalModules;
+        })
+        it('should fail if using OS module with functionExternalModules set to false', function(done) {
+            var flow = [
+                {id:"n1",type:"function",wires:[["n2"]],func:"msg.payload = os.type(); return msg;", "libs": [{var:"os", module:"os"}]},
+                {id:"n2", type:"helper"}
+            ];
+            RED.settings.functionExternalModules = false;
+            helper.load(functionNode, flow, function() {
+                var n1 = helper.getNode("n1");
+                should.not.exist(n1);
+                done();
+            }).catch(err => done(err));
+        })
+
+        it('should fail if using OS module without it listed in libs', function(done) {
+            var flow = [
+                {id:"n1",type:"function",wires:[["n2"]],func:"msg.payload = os.type(); return msg;"},
+                {id:"n2", type:"helper"}
+            ];
+            helper.load(functionNode, flow, function() {
+                var n1 = helper.getNode("n1");
+                var n2 = helper.getNode("n2");
+                var messageReceived = false;
+                n2.on("input", function(msg) {
+                    messageReceived = true;
+                });
+                n1.receive({payload:"foo",topic: "bar"});
+                setTimeout(function() {
+                    try {
+                        messageReceived.should.be.false();
+                        done();
+                    } catch(err) {
+                        done(err);
+                    }
+                },20);
+            }).catch(err => done(err));
+        })
+        it('should require the OS module', function(done) {
+            var flow = [
+                {id:"n1",type:"function",wires:[["n2"]],func:"msg.payload = os.type(); return msg;", "libs": [{var:"os", module:"os"}]},
+                {id:"n2", type:"helper"}
+            ];
+            helper.load(functionNode, flow, function() {
+                var n1 = helper.getNode("n1");
+                var n2 = helper.getNode("n2");
+                n2.on("input", function(msg) {
+                    try {
+                        msg.should.have.property('topic', 'bar');
+                        msg.should.have.property('payload', require('os').type());
+                        done();
+                    } catch(err) {
+                        done(err);
+                    }
+                });
+                n1.receive({payload:"foo",topic: "bar"});
+            }).catch(err => done(err));
+        })
+        it('should fail if module variable name clashes with sandbox builtin', function(done) {
+            var flow = [
+                {id:"n1",type:"function",wires:[["n2"]],func:"msg.payload = os.type(); return msg;", "libs": [{var:"flow", module:"os"}]},
+                {id:"n2", type:"helper"}
+            ];
+            helper.load(functionNode, flow, function() {
+                var n1 = helper.getNode("n1");
+                should.not.exist(n1);
+                done();
+            }).catch(err => done(err));
+        })
+    })
+
 
     describe('Logger', function () {
 
@@ -1510,9 +1720,13 @@ describe('function node', function() {
     describe("init function", function() {
 
         it('should delay handling messages until init completes', function(done) {
+            const timeoutMS = 200;
+            // Since helper.load uses process.nextTick timers might occasionally finish
+            // a couple of milliseconds too early, so give some leeway to the check.
+            const timeoutCheckMargin = 5;
             var flow = [{id:"n1",type:"function",wires:[["n2"]],initialize: `
                 return new Promise((resolve,reject) => {
-                    setTimeout(resolve,200)
+                    setTimeout(resolve, ${timeoutMS});
                 })`,
                 func:"return msg;"
             },
@@ -1525,9 +1739,10 @@ describe('function node', function() {
                     msg.delta = Date.now() - msg.payload;
                     receivedMsgs.push(msg)
                     if (receivedMsgs.length === 5) {
-                        var errors = receivedMsgs.filter(msg => msg.delta < 200)
+                        let deltas = receivedMsgs.map(msg => msg.delta);
+                        var errors = deltas.filter(delta => delta < (timeoutMS - timeoutCheckMargin))
                         if (errors.length > 0) {
-                            done(new Error(`Message received before init completed - was ${msg.delta} expected >300`))
+                            done(new Error(`Message received before init completed - delta values ${JSON.stringify(deltas)} expected to be > ${timeoutMS - timeoutCheckMargin}`))
                         } else {
                             done();
                         }
@@ -1539,8 +1754,8 @@ describe('function node', function() {
             });
         });
 
-        it('should allow accessing node.id and node.name and sending message', function(done) {
-            var flow = [{id:"n1",name:"test-function", type:"function",wires:[["n2"]],initialize:"setTimeout(function() { node.send({ topic: node.name, payload:node.id})},10)", func: ""},
+        it('should allow accessing node.id and node.name and node.outputCount and sending message', function(done) {
+            var flow = [{id:"n1",name:"test-function", outputs: 1, type:"function",wires:[["n2"]],initialize:"setTimeout(function() { node.send({ topic: node.name, payload:node.id, outputCount: node.outputCount})},10)", func: ""},
             {id:"n2", type:"helper"}];
             helper.load(functionNode, flow, function() {
                 var n1 = helper.getNode("n1");
@@ -1551,6 +1766,7 @@ describe('function node', function() {
                         // the sandbox and doesn't get all the should.js monkey patching
                         should.equal(msg.payload, n1.id);
                         should.equal(msg.topic, n1.name);
+                        should.equal(msg.outputCount, n1.outputs);
                         done();
                     } catch(err) {
                         done(err);
@@ -1559,5 +1775,5 @@ describe('function node', function() {
             });
         });
 
-    })
+    });
 });
